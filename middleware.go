@@ -172,7 +172,10 @@ func (r *oauthProxy) tracingMiddleware(next http.Handler) http.Handler {
 		serverSpan := opentracing.GlobalTracer().StartSpan(req.Host, ext.RPCServerOption(spanCtx))
 		defer serverSpan.Finish()
 		serverSpan.SetTag("uri", req.URL.RequestURI())
-		opentracing.GlobalTracer().Inject(serverSpan.Context(), opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(req.Header))
+		err := opentracing.GlobalTracer().Inject(serverSpan.Context(), opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(req.Header))
+		if err != nil {
+			r.log.Error("error injecting tracer", zap.Error(err))
+		}
 		next.ServeHTTP(w, req.WithContext(opentracing.ContextWithSpan(req.Context(), serverSpan)))
 	})
 }
