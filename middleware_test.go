@@ -350,6 +350,28 @@ func TestMetricsMiddleware(t *testing.T) {
 	newFakeProxy(cfg).RunTests(t, requests)
 }
 
+func TestTracingMiddleware(t *testing.T) {
+	cfg := newFakeKeycloakConfig()
+	cfg.EnableTracing = true
+	cfg.EnableMetrics = true
+	requests := []fakeRequest{
+		{
+			URI: cfg.WithOAuthURI(metricsURL),
+			Headers: map[string]string{
+				"Uber-Trace-ID": "20aa467a9da51ac8:b71d2ac42cc83270:46e01a6d5e5cfe1f:1",
+			},
+			ExpectedCode: http.StatusOK,
+		},
+		// Some request must run before this one to generate tracing numbers
+		{
+			URI:                     cfg.WithOAuthURI(metricsURL),
+			ExpectedCode:            http.StatusOK,
+			ExpectedContentContains: `jaeger_tracer_traces_total{sampled="y",state="joined"} 1`,
+		},
+	}
+	newFakeProxy(cfg).RunTests(t, requests)
+}
+
 func TestOauthRequests(t *testing.T) {
 	cfg := newFakeKeycloakConfig()
 	requests := []fakeRequest{

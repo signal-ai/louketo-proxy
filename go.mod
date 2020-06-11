@@ -1,13 +1,13 @@
-module github.com/louketo/louketo-proxy
+module github.com/signal-ai/louketo-proxy
 
 require (
+	github.com/HdrHistogram/hdrhistogram-go v1.0.1 // indirect
 	github.com/PuerkitoBio/purell v1.1.0
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/armon/go-proxyproto v0.0.0-20180202201750-5b7edb60ff5f
 	github.com/codegangsta/negroni v1.0.0 // indirect
 	github.com/coreos/go-oidc v0.0.0-20171020180921-e860bd55bfa7
 	github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/elazarl/goproxy v0.0.0-20181111060418-2ce16c963a8a
 	github.com/etcd-io/bbolt v1.3.3
 	github.com/fsnotify/fsnotify v1.4.7
@@ -18,10 +18,13 @@ require (
 	github.com/kylelemons/godebug v0.0.0-20170820004349-d65d576e9348 // indirect
 	github.com/onsi/ginkgo v1.8.0 // indirect
 	github.com/onsi/gomega v1.5.0 // indirect
+	github.com/opentracing/opentracing-go v1.1.0
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/prometheus/client_golang v0.9.2
 	github.com/rs/cors v1.6.0
-	github.com/stretchr/testify v1.5.1
+	github.com/stretchr/testify v1.6.1
+	github.com/uber/jaeger-client-go v2.25.0+incompatible
+	github.com/uber/jaeger-lib v2.4.0+incompatible
 	github.com/unrolled/secure v0.0.0-20181221173256-0d6b5bb13069
 	github.com/urfave/cli v0.0.0-20181029213200-b67dcf995b6a
 	go.etcd.io/bbolt v1.3.3 // indirect

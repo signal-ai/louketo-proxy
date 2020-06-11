@@ -32,6 +32,8 @@ import (
 	"github.com/PuerkitoBio/purell"
 	"github.com/coreos/go-oidc/jose"
 	"github.com/go-chi/chi/middleware"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
 	"github.com/unrolled/secure"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -160,6 +162,18 @@ func (r *oauthProxy) loggingMiddleware(next http.Handler) http.Handler {
 				zap.String("path", req.URL.Path),
 				zap.String("raw path", req.URL.RawPath))
 		}
+	})
+}
+
+// tracingMiddleware is a custom http tracer
+func (r *oauthProxy) tracingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		spanCtx, _ := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(req.Header))
+		serverSpan := opentracing.GlobalTracer().StartSpan(req.Host, ext.RPCServerOption(spanCtx))
+		defer serverSpan.Finish()
+		serverSpan.SetTag("uri", req.URL.RequestURI())
+		opentracing.GlobalTracer().Inject(serverSpan.Context(), opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(req.Header))
+		next.ServeHTTP(w, req.WithContext(opentracing.ContextWithSpan(req.Context(), serverSpan)))
 	})
 }
 

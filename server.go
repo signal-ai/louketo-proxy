@@ -46,6 +46,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/cors"
+	jaegercfg "github.com/uber/jaeger-client-go/config"
+	jaegerPrometheus "github.com/uber/jaeger-lib/metrics/prometheus"
 	"go.uber.org/zap"
 )
 
@@ -156,6 +158,26 @@ func createLogger(config *Config) (*zap.Logger, error) {
 	return c.Build()
 }
 
+// createJaegerTracer is responsible for creating the jaeger tracer
+func (r *oauthProxy) createJaegerTracer() error {
+	r.log.Info("initializing jaeger tracer")
+	// generating config from env default
+	cfg, err := jaegercfg.FromEnv()
+	if err != nil {
+		return fmt.Errorf("could not parse jaeger env vars: %s", err.Error())
+	}
+	// added prometheus client metrics
+	prometheusMetricsFactory := jaegerPrometheus.New()
+	_, err = cfg.InitGlobalTracer(
+		prog,
+		jaegercfg.Metrics(prometheusMetricsFactory),
+	)
+	if err != nil {
+		return fmt.Errorf("could not initialize jaeger tracer: %s", err.Error())
+	}
+	return nil
+}
+
 // createReverseProxy creates a reverse proxy
 func (r *oauthProxy) createReverseProxy() error {
 	r.log.Info("enabled reverse proxy mode, upstream url", zap.String("url", r.config.Upstream))
@@ -177,6 +199,13 @@ func (r *oauthProxy) createReverseProxy() error {
 	if r.config.EnableCompression {
 		engine.Use(gzipMiddleware)
 	}
+	if r.config.EnableTracing {
+		if err := r.createJaegerTracer(); err != nil {
+			return err
+		}
+		engine.Use(r.tracingMiddleware)
+	}
+
 	if r.config.EnableLogging {
 		engine.Use(r.loggingMiddleware)
 	}

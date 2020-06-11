@@ -216,6 +216,8 @@ type Config struct {
 	ForceEncryptedCookie bool `json:"force-encrypted-cookie" yaml:"force-encrypted-cookie" usage:"force encryption for the access tokens in cookies"`
 	// EnableLogging indicates if we should log all the requests
 	EnableLogging bool `json:"enable-logging" yaml:"enable-logging" usage:"enable http logging of the requests"`
+	// EnableTracing indicates if we should trace all the requests
+	EnableTracing bool `json:"enable-tracing" yaml:"enable-tracing" usage:"enable opentracing for requests"`
 	// EnableJSONLogging is the logging format
 	EnableJSONLogging bool `json:"enable-json-logging" yaml:"enable-json-logging" usage:"switch on json logging rather than text"`
 	// EnableForwarding enables the forwarding proxy
