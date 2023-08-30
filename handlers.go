@@ -124,10 +124,10 @@ func (r *oauthProxy) oauthCallbackHandler(w http.ResponseWriter, req *http.Reque
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	
+
 	conf := r.newOAuth2Config(r.getRedirectionURL(w, req))
 
-	fmt.Printf("%+v\n", redirectionURL)
+	fmt.Printf("%+v\n", r.getRedirectionURL)
 	fmt.Printf("%+v\n", conf)
 
 	resp, err := exchangeAuthenticationCode(conf, code)
