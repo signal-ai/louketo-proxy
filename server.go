@@ -701,6 +701,7 @@ func (r *oauthProxy) newOpenIDClient() (*oidc.Client, oidc.ProviderConfig, *http
 				zap.String("url", r.config.DiscoveryURL),
 				zap.String("timeout", r.config.OpenIDProviderTimeout.String()))
 			if config, err = oidc.FetchProviderConfig(hc, r.config.DiscoveryURL); err == nil {
+				fmt.Println(config)
 				break // break and complete
 			}
 			r.log.Warn("failed to get provider configuration from discovery", zap.Error(err))
