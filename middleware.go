@@ -321,6 +321,7 @@ func (r *oauthProxy) authenticationMiddleware() func(http.Handler) http.Handler 
 						next.ServeHTTP(w, req.WithContext(r.redirectToAuthorization(w, req)))
 						return
 					}
+					scope.Identity = user
 					ctx = context.WithValue(req.Context(), contextScopeName, scope)
 				}
 			}
