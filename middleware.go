@@ -169,7 +169,7 @@ func (r *oauthProxy) authenticationMiddleware() func(http.Handler) http.Handler 
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			clientIP := req.RemoteAddr
 			// grab the user identity from the request
-			user, err := r.getIdentity(req)
+			user, err := r.getIdentityFromRequest(req)
 			if err != nil {
 				r.log.Error("no session found in request, redirecting for authorization", zap.Error(err))
 				next.ServeHTTP(w, req.WithContext(r.redirectToAuthorization(w, req)))
@@ -315,7 +315,12 @@ func (r *oauthProxy) authenticationMiddleware() func(http.Handler) http.Handler 
 					}
 
 					// update the with the new access token and inject into the context
-					user.token = token
+					user, err = r.getIdentityFromToken(token, user.bearerToken)
+					if err != nil {
+						r.log.Error("regenerated token is invalid, redirecting for authorization", zap.Error(err))
+						next.ServeHTTP(w, req.WithContext(r.redirectToAuthorization(w, req)))
+						return
+					}
 					ctx = context.WithValue(req.Context(), contextScopeName, scope)
 				}
 			}
