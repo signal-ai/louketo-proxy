@@ -17,6 +17,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -43,6 +44,9 @@ func (r *oauthProxy) getIdentityFromRequest(req *http.Request) (*userContext, er
 		return nil, err
 	}
 	user, err := r.getIdentityFromToken(parsedToken, isBearer)
+	if err != nil {
+		return nil, err
+	}
 
 	r.log.Debug("found the user identity",
 		zap.String("id", user.id),
@@ -56,6 +60,9 @@ func (r *oauthProxy) getIdentityFromRequest(req *http.Request) (*userContext, er
 
 // getIdentityFromToken retrieves the user identity from a session cookie or a bearer token
 func (r *oauthProxy) getIdentityFromToken(token jose.JWT, isBearer bool) (*userContext, error) {
+	if err := verifyTokenSignature(r.keyFunc, token.Encode()); err != nil {
+		return nil, fmt.Errorf("failed to verify the token signature: %w", err)
+	}
 	user, err := extractIdentity(token)
 	if err != nil {
 		return nil, err

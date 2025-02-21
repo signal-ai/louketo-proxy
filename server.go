@@ -38,11 +38,13 @@ import (
 
 	httplog "log"
 
+	"github.com/MicahParks/keyfunc"
 	proxyproto "github.com/armon/go-proxyproto"
 	"github.com/coreos/go-oidc/oidc"
 	"github.com/elazarl/goproxy"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/cors"
@@ -63,6 +65,7 @@ type oauthProxy struct {
 	store          storage
 	templates      *template.Template
 	upstream       reverseProxy
+	keyFunc        jwt.Keyfunc
 }
 
 func init() {
@@ -75,7 +78,7 @@ func init() {
 	prometheus.MustRegister(statusMetric)
 }
 
-// newProxy create's a new proxy from configuration
+// newProxy creates a new proxy from configuration
 func newProxy(config *Config) (*oauthProxy, error) {
 	// create the service logger
 	log, err := createLogger(config)
@@ -125,6 +128,22 @@ func newProxy(config *Config) (*oauthProxy, error) {
 			return nil, err
 		}
 	}
+
+	keyfuncOptions := keyfunc.Options{
+		Ctx: context.Background(),
+		RefreshErrorHandler: func(err error) {
+			log.Warn(fmt.Sprintf("There was an error with the jwt.Keyfunc\nError: %s", err.Error()))
+		},
+		RefreshInterval:   time.Hour,
+		RefreshRateLimit:  time.Minute * 5,
+		RefreshTimeout:    time.Second * 10,
+		RefreshUnknownKID: true,
+	}
+	jwks, err := keyfunc.Get(svc.idp.KeysEndpoint.String(), keyfuncOptions)
+	if err != nil {
+		log.Fatal(fmt.Sprintf("Failed to create JWKS from resource at the given URL.\nError: %s", err.Error()))
+	}
+	svc.keyFunc = jwks.Keyfunc
 
 	return svc, nil
 }

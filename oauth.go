@@ -28,6 +28,7 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/coreos/go-oidc/jose"
+	"github.com/golang-jwt/jwt/v4"
 
 	"github.com/coreos/go-oidc/oidc"
 )
@@ -61,6 +62,15 @@ func verifyToken(client *oidc.Client, token jose.JWT) error {
 		if strings.Contains(err.Error(), "token is expired") {
 			return ErrAccessTokenExpired
 		}
+		return err
+	}
+
+	return nil
+}
+
+// verifyToken verify that the token in the user context is valid
+func verifyTokenSignature(keyfunc jwt.Keyfunc, token string) error {
+	if _, err := jwt.Parse(token, keyfunc, jwt.WithoutClaimsValidation()); err != nil {
 		return err
 	}
 
